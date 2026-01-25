@@ -12,6 +12,7 @@ export default function Register() {
     const [loading, setloading] = useState(false)
     const emailref = useRef()
     const passwordref = useRef()
+    const nameref = useRef()
     const go = useNavigate()
 
     async function handleRegister(ev) {
@@ -20,7 +21,8 @@ export default function Register() {
         try {
             const data = {
                 email: emailref.current.value,
-                password: passwordref.current.value
+                password: passwordref.current.value,
+                name: nameref.current.value,
             }
 
             const response = await api.post("/api/v1/auth/register", data)
@@ -61,6 +63,11 @@ export default function Register() {
                 <Form.Group className='mb-4'>
                     <Form.Label className='mb-3'>E-mail</Form.Label>
                     <Form.Control type='email' id='email' name='email' placeholder='enter your email' ref={emailref} />
+                </Form.Group>
+
+                <Form.Group className='mb-4'>
+                    <Form.Label className='mb-3'>Name</Form.Label>
+                    <Form.Control type='text' id='name' name='name' placeholder='enter your Name' ref={nameref} />
                 </Form.Group>
 
                 <Form.Group className='mb-4'>

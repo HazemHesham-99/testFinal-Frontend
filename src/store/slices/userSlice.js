@@ -10,15 +10,19 @@ const userSlice = createSlice({
         setUser:(state,action)=>{
             state.user=action.payload
             state.isLoggedIn = true
-            console.log(action.payload)
         },
         clearUser:(state)=>{
             state.isLoggedIn= false,
             state.user =null
             localStorage.removeItem("token")
+        },
+        updateProfile:(state,action)=>{
+            const {profilePic , bio}=action.payload
+            state.user.profilePic = profilePic
+            state.user.bio = bio
         }
     }
 })
 
-export const {setUser, clearUser} = userSlice.actions
+export const {setUser, clearUser,updateProfile} = userSlice.actions
 export default userSlice.reducer

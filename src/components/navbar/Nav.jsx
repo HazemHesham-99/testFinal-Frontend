@@ -10,13 +10,13 @@ import { clearUser } from '../../store/slices/userSlice';
 
 
 export default function NavBar() {
-  const {isLoggedIn} = useSelector((state) => state.user)
+  const { isLoggedIn } = useSelector((state) => state.user)
   const go = useNavigate()
-  const dispatch=useDispatch()
-function handleLogout(){
-dispatch(clearUser())
-go("/login")
-}
+  const dispatch = useDispatch()
+  function handleLogout() {
+    dispatch(clearUser())
+    go("/login")
+  }
   return (
     <Navbar expand="md" className="bg-body-tertiary" bg="primary" data-bs-theme="dark">
       <Container>
@@ -29,10 +29,16 @@ go("/login")
             {!isLoggedIn && <>     <Nav.Link as={Link} to='/register'>Register</Nav.Link>
               <Nav.Link as={Link} to='/login'>Login</Nav.Link></>}
 
-{isLoggedIn && <Button variant='outline-danger' onClick={handleLogout}>Logout</Button>}
+            {isLoggedIn &&
+              <>
+                <Nav.Link as={Link} to='/profile'>Profile</Nav.Link>
+                <Button variant='outline-danger' onClick={handleLogout}>Logout</Button>
+
+              </>}
+
           </Nav>
         </Navbar.Collapse>
       </Container>
-    </Navbar>
+    </Navbar >
   )
 }
