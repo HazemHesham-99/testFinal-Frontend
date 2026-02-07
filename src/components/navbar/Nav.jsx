@@ -18,21 +18,21 @@ export default function NavBar() {
     go("/login")
   }
   return (
-    <Navbar expand="md" className="bg-body-tertiary" bg="primary" data-bs-theme="dark">
+    <Navbar expand="md" className="bg-primary navbar-dark rounded-2 "   >
       <Container>
-        <Navbar.Brand as={Link} to='/'>first site</Navbar.Brand>
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Brand className='text-light display-1 fw-bolder' as={Link} to='/'>ZBOOK</Navbar.Brand>
+        <Navbar.Toggle aria-controls="basic-navbar-nav" className="border-white"/>
 
-        <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="ms-auto">
-            <Nav.Link as={Link} to='/'>Home</Nav.Link>
-            {!isLoggedIn && <>     <Nav.Link as={Link} to='/register'>Register</Nav.Link>
-              <Nav.Link as={Link} to='/login'>Login</Nav.Link></>}
+        <Navbar.Collapse className="text-white "  id="basic-navbar-nav">
+          <Nav className="ms-auto d-flex align-items-center">
+            <Nav.Link className="text-white"  as={Link} to='/'>Home</Nav.Link>
+            {!isLoggedIn && <>     <Nav.Link className="text-white"  as={Link} to='/register'>Register</Nav.Link>
+              <Nav.Link className="text-white" as={Link} to='/login'>Login</Nav.Link></>}
 
             {isLoggedIn &&
               <>
-                <Nav.Link as={Link} to='/profile'>Profile</Nav.Link>
-                <Button variant='outline-danger' onClick={handleLogout}>Logout</Button>
+                <Nav.Link as={Link} className="text-white" to='/profile'>Profile</Nav.Link>
+                <Button  variant='danger' onClick={handleLogout}>Logout</Button>
 
               </>}
 

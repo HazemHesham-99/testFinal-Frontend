@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import "./App.css"
 import NavBar from './components/navbar/Nav'
-import { Container } from 'react-bootstrap'
+import { Button, Container } from 'react-bootstrap'
 import { Route, Routes } from 'react-router-dom'
 import Login from './pages/login/Login'
 import Register from './pages/register/Register'
@@ -15,18 +15,24 @@ import Restpassword from './pages/resetpassword/Restpassword'
 import Home from './pages/home/Home'
 import Profile from './pages/profile/Profile'
 import AddComment from './components/addComment/AddComment'
+import { BsFillMoonFill, BsMoon } from "react-icons/bs";
 
 export default function App() {
   const { isLoggedIn } = useSelector((state) => state.user)
   const dispatch = useDispatch()
 
 
-  const [theme, setTheme] = useState('light');
-    useEffect(() => {
+  const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
+  useEffect(() => {
+    // setTheme(localStorage.getItem("theme") || "light")
     document.documentElement.setAttribute('data-theme', theme);
+              localStorage.setItem("theme", theme)
+
   }, [theme]);
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    // theme === 'light' ? theme = "dark" : theme
+
   };
 
 
@@ -60,9 +66,9 @@ export default function App() {
       <NavBar />
 
       {/* light and dark mood */}
-      <button onClick={toggleTheme}>
-        Switch to {theme === 'light' ? 'Dark' : 'Light'} Mode
-      </button>
+      <Button className='displayMoodButton' variant="outline-primary" onClick={toggleTheme}>
+        {theme === 'light' ? '🌙' : '☀️'}
+      </Button>
 
 
 
