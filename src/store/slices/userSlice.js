@@ -17,9 +17,10 @@ const userSlice = createSlice({
             localStorage.removeItem("token")
         },
         updateProfile:(state,action)=>{
-            const {profilePic , bio}=action.payload
+            const {profilePic , bio,name}=action.payload
             state.user.profilePic = profilePic
             state.user.bio = bio
+            state.user.name = name
         }
     }
 })

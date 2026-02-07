@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 
 export default function Register() {
-    const [togglePassword, settogglePassword] = useState("false")
+    const [togglePassword, settogglePassword] = useState(false)
     const [loading, setloading] = useState(false)
     const emailref = useRef()
     const passwordref = useRef()
@@ -17,7 +17,7 @@ export default function Register() {
 
     async function handleRegister(ev) {
         ev.preventDefault()
-        setloading("true")
+        setloading(true)
         try {
             const data = {
                 email: emailref.current.value,
@@ -28,7 +28,7 @@ export default function Register() {
             const response = await api.post("/api/v1/auth/register", data)
 
             toast.success(response.data.message)
-            localStorage.setItem("email",data.email)
+            localStorage.setItem("email", data.email)
             go("/verify-otp")
 
         } catch (error) {
@@ -54,34 +54,58 @@ export default function Register() {
     }
 
     if (loading) {
-       return <Loading />
+        return <Loading />
     }
 
     return (
-        <div>
-            <Form onSubmit={handleRegister}>
-                <Form.Group className='mb-4'>
-                    <Form.Label className='mb-3'>E-mail</Form.Label>
-                    <Form.Control type='email' id='email' name='email' placeholder='enter your email' ref={emailref} />
-                </Form.Group>
+        <div className='d-flex justify-content-center align-items-center min-vh-80 pt-5'>
+            <div className='container'>
+                <div className='row justify-content-center'>
+                    <div className='col-12 col-md-8 col-lg-6'>
+                        {/* LOGO */}
+                        <div className='text-center mb-5'>
+                            <div className='d-flex align-items-center justify-content-center '>
+                                <h1 class="display-1 fw-bolder text-primary">ZBOOK</h1>
+                            </div>
+                            <p >Join thousands of users worldwide</p>
+                        </div>
 
-                <Form.Group className='mb-4'>
-                    <Form.Label className='mb-3'>Name</Form.Label>
-                    <Form.Control type='text' id='name' name='name' placeholder='enter your Name' ref={nameref} />
-                </Form.Group>
+                        {/* Registration form */}
+                        <Form className="shadow-lg p-4 rounded-4" onSubmit={handleRegister}>
+                            <h3 className='text-center'>Create New Account</h3>
+                            <hr />
+                            {/* E-mail */}
+                            <Form.Group className='mb-4 mt-4'>
+                                <Form.Label className='mb-3'>E-mail</Form.Label>
+                                <Form.Control type='email' id='email' name='email' placeholder='enter your email' ref={emailref} />
+                            </Form.Group>
 
-                <Form.Group className='mb-4'>
-                    <Form.Label className='mb-3'>Password</Form.Label>
-                    <InputGroup>
-                        <Form.Control type={togglePassword ? 'password' : 'text'} id='password' name='password' placeholder='enter your password' ref={passwordref} />
-                        <InputGroup.Text style={{ cursor: 'pointer' }} onClick={controlPassword}>
-                            {togglePassword ? <FaRegEye /> : <FaEyeSlash />}
-                        </InputGroup.Text>
-                    </InputGroup>
-                </Form.Group>
+                            {/* Username */}
+                            <Form.Group className='mb-4'>
+                                <Form.Label className='mb-3'>Name</Form.Label>
+                                <Form.Control type='text' id='name' name='name' placeholder='enter your Name' ref={nameref} />
+                            </Form.Group>
 
-                <Button type='submit'>Register</Button>
-            </Form>
+                            {/* password */}
+                            <Form.Group className='mb-4'>
+                                <Form.Label className='mb-3'>Password</Form.Label>
+                                <InputGroup>
+                                    <Form.Control type={togglePassword ? 'password' : 'text'} id='password' name='password' placeholder='enter your password' ref={passwordref} />
+                                    <InputGroup.Text style={{ cursor: 'pointer' }} onClick={controlPassword}>
+                                        {togglePassword ?  <FaEyeSlash /> : <FaRegEye />}
+                                    </InputGroup.Text>
+                                </InputGroup>
+                            </Form.Group>
+
+                            {/* submit Button */}
+                            <div className='d-flex justify-content-center'>
+                                <Button variant="primary" size="lg" className="px-5" type='submit'>Register</Button>
+
+                            </div>
+                        </Form>
+                    </div>
+                </div>
+            </div>
         </div>
     )
 }

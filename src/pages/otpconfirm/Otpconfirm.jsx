@@ -29,7 +29,7 @@ export default function Otpconfirm() {
     const dispatch = useDispatch()
     const [loading, setloading] = useState(false)
     const [butloading, setbutloading] = useState(false)
-    const { time, setTime } = useTimer(0)
+    const { time, setTime } = useTimer(60)
 
 
     async function handleOtp(ev) {
@@ -69,7 +69,7 @@ export default function Otpconfirm() {
             console.log(error)
             toast.error(error.response.data.message)
 
-        }finally{
+        } finally {
             setbutloading(false)
         }
     }
@@ -82,21 +82,22 @@ export default function Otpconfirm() {
     }
 
     return (
-        <div>
-            <Form onSubmit={handleOtp}>
+        <div className='d-flex justify-content-center align-items-center min-vh-50 pt-5'>
+            <Form className="shadow-lg p-4 rounded-4" onSubmit={handleOtp}>
                 <Form.Group className='mb-4'>
-                    <Form.Label className='mb-3'>ENTER OTP</Form.Label>
+                    <Form.Label className='mb-3 text-center fw-bold d-block fs-5'>ENTER OTP</Form.Label>
                     <InputGroup>
                         <Form.Control type='text' id='otp' name='otp' placeholder='enter the OTP' ref={otpref} maxLength={6} minLength={6} />
                         {time ? <InputGroup.Text>{time}</InputGroup.Text> : <Button variant='outline-secondary' style={{ cursor: 'pointer' }} onClick={controlResendOTP}>
-                           {butloading? <Loading /> : "Resend OTP" }
+                            {butloading ? <Loading size='sm' /> : "Resend OTP"}
                         </Button>}
                     </InputGroup>
                 </Form.Group>
 
 
-
-                <Button type='submit'>Register</Button>
+                <div className='d-flex justify-content-center'>
+                    <Button type='submit'>Confirm OTP</Button>
+                </div>
 
             </Form>
 

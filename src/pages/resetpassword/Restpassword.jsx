@@ -51,19 +51,23 @@ export default function Restpassword() {
         return <Loading />
     }
     return (
-        <Form onSubmit={handleResetPassword}>
+                <div className='d-flex justify-content-center align-items-center min-vh-50 pt-5'>
+
+        <Form className="shadow-lg p-4 rounded-4" onSubmit={handleResetPassword}>
             <Form.Group className='mb-4'>
-                <Form.Label className='mb-3'>New Password</Form.Label>
+                <Form.Label className='mb-3 fs-5'>New Password</Form.Label>
                 <InputGroup>
                     <Form.Control type={togglePassword ? 'password' : 'text'} id='password' name='password' placeholder='enter your password' ref={passwordref} />
                     <InputGroup.Text style={{ cursor: 'pointer' }} onClick={controlPassword}>
-                        {togglePassword ? <FaRegEye /> : <FaEyeSlash />}
+                        {togglePassword ?  <FaEyeSlash /> : <FaRegEye /> }
                     </InputGroup.Text>
                 </InputGroup>
             </Form.Group>
+<div className='d-flex justify-content-center'>
             <Button type='submit'>Reset</Button>
-
+                    
+                </div>
         </Form>
-
+</div>
     )
 }
