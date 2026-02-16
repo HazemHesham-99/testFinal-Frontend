@@ -16,7 +16,7 @@ export default function CommentPage({ post, show, onClose }) {
         setDeletedComment("")
     }
 
-    // to appear updated comment to be 
+    // to appear updated comment
     const [updateComment, setUpdateComment] = useState("")
     if (updateComment) {
         console.log(updateComment)

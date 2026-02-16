@@ -20,9 +20,7 @@ function CommentCard({ comment, setDeletedComment }) {
         const token = localStorage.getItem("token")
         console.log(text)
         try {
-            const response = await api.put(`/api/v1/comment/${id}/update`, { text }, {
-                headers: { Authorization: `Bearer ${token}` }
-            })
+            const response = await api.put(`/api/v1/comment/${id}/update`, { text })
             setUpdatedComment(response.data.comment.text)
             toast.success(response.data.message)
             setShowEdit(false)
@@ -37,7 +35,6 @@ function CommentCard({ comment, setDeletedComment }) {
 
         try {
             const response = await api.delete(`/api/v1/comment/${id}`)
-            console.log(response)
             toast.success(response.data.message)
             setDeletedComment(id)
         } catch (error) {
@@ -99,24 +96,10 @@ function CommentCard({ comment, setDeletedComment }) {
                         {/* Comment Text */}
                         <p className="mb-2">{updatedComment}</p>
                         {showedit && (
-                            <div 
-                            className="d-flex align-items-baseline gap-2"
-                            >
+                            <div className="d-flex align-items-baseline gap-2">
                                 <GeneralComment commentText={commentText} handleSubmit={handleEdit} setCommentText={setCommentText} />
-                                <Button className="btn btn-secondary" onClick={()=>{setShowEdit(false)}}>Cancel</Button>
+                                <Button className="btn btn-secondary" onClick={() => { setShowEdit(false) }}>Cancel</Button>
                             </div>)}
-                        {/* Comment Actions */}
-                        <div className="d-flex align-items-center">
-                            {/* <button className="btn btn-link text-muted p-0 me-3 text-decoration-none">
-                                <ThumbsUp size={16} className="me-1" />
-                                <small>{comment.likes.length}</small>
-                            </button>
-                            <button className="btn btn-link text-muted p-0 text-decoration-none">
-                                <Reply size={16} className="me-1" />
-                                <small>Reply</small>
-                            </button> */}
-                        
-                        </div>
 
 
                     </div>
