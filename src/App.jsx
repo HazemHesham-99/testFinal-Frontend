@@ -15,7 +15,7 @@ import Restpassword from './pages/resetpassword/Restpassword'
 import Home from './pages/home/Home'
 import Profile from './pages/profile/Profile'
 import AddComment from './components/addComment/AddComment'
-import { BsFillMoonFill, BsMoon } from "react-icons/bs";
+import Messages from './pages/Messages/Messages'
 
 export default function App() {
   const { isLoggedIn } = useSelector((state) => state.user)
@@ -24,15 +24,12 @@ export default function App() {
 
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
   useEffect(() => {
-    // setTheme(localStorage.getItem("theme") || "light")
     document.documentElement.setAttribute('data-theme', theme);
-              localStorage.setItem("theme", theme)
+    localStorage.setItem("theme", theme)
 
   }, [theme]);
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
-    // theme === 'light' ? theme = "dark" : theme
-
   };
 
 
@@ -82,6 +79,7 @@ export default function App() {
 
             </>)}
             <Route Component={Home} path='/' />
+            <Route Component={Messages} path='/messages' />
 
             {(!isLoggedIn) && (<>
               <Route Component={Login} path='/login' />
