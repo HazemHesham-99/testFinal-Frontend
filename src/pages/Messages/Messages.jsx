@@ -1,210 +1,238 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { Button, Card, Container, Form } from 'react-bootstrap'
-import io from 'socket.io-client'
+import React, { useEffect, useRef, useState, useCallback } from 'react'
+import { Button, Container, Form } from 'react-bootstrap'
 import OnlineUsersSidebar from '../../components/messages/onlineUsersSidebar/OnlineUsersSidebar'
 import MessagesList from '../../components/messages/messagesList/MessagesList'
+import useSocket from '../../hooks/useSocket'
+import { setupChatListeners } from '../../socket/chatListeners'
 
 export default function Messages() {
-    const socketRef = useRef(null)
+    const socket = useSocket() // Get socket from context
     const [onlineUsers, setOnlineUsers] = useState([])
     const [selectedUser, setSelectedUser] = useState(null)
     const [privateMessages, setPrivateMessages] = useState({})
     const [userInfo, setUserInfo] = useState(null)
     const [isConnected, setIsConnected] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
     const messageRef = useRef()
 
+    // Define handlers with useCallback
+    const handleHistory = (data) => {
 
-    useEffect(() => {
-        const token = localStorage.getItem('token')
-        console.log('Token:', token ? 'Found' : 'Not found')
+        const messages = data.messages || data
+        const targetUserId = data.userId || data.otherUserId || selectedUser?.userId
+        const fromUser = data.fromUser
 
 
-        //CHECK TOKEN
-        if (!token) {
-            alert('Please login first')
-            window.location.href = '/login'
+        if (!fromUser) {
+            return
+        }
+
+        if (!targetUserId) {
             return
         }
 
 
-        // Disconnect existing socket if any BEFORE REconnect
-        if (socketRef.current) {
-            socketRef.current.disconnect()
+        // storing loaded messages
+        setPrivateMessages(prev => {
+            const formatted = messages.map(msg => (
+                {
+                    message: msg.message,
+                    isMe: String(msg.fromUserId) === String(fromUser),
+                    fromUserId: msg.fromUserId,
+                    fromUsername: msg.fromUsername,
+                    toUserId: msg.toUserId,
+                    toUsername: msg.toUsername,
+                    timestamp: msg.createdAt
+                }))
+
+            return {
+                ...prev,
+                [targetUserId]: formatted
+            }
+        })
+    }
+
+    const handleReceiveMessage = (data) => {
+
+        setPrivateMessages(prev => {
+            const existing = prev[data.fromUserId] || []
+
+            return {
+                ...prev,
+                [data.fromUserId]: [...existing, {
+                    message: data.message,
+                    fromUserId: data.fromUserId,
+                    fromUsername: data.fromUsername,
+                    isMe: false,
+                    timestamp: data.timestamp
+                }]
+            }
+        })
+    }
+
+    useEffect(() => {
+        // check if socket avaliable
+        if (!socket) {
+            setIsLoading(true)
+            return
         }
 
-        //intialize socket io (backened connection string + token)
-        socketRef.current = io(import.meta.env.VITE_BACKEND_BASE, {
-            auth: {
-                token: `Bearer ${token}`
-            },
-            withCredentials: true,
-            transports: ['websocket', 'polling']
-        })
 
-        //connected to socket io server
-        socketRef.current.on('connect', () => {
+
+        // Set initial connection status
+        setIsConnected(socket.connected)
+
+        // Connection status
+        const handleConnect = () => {
             setIsConnected(true)
-        })
+        }
 
-        // entered chat
-        socketRef.current.on('chat:connected', (data) => {
+        const handleDisconnect = () => {
+            console.log('Socket disconnected in Messages component')
+
+            setIsConnected(false)
+            setOnlineUsers([])
+            setSelectedUser(null)
+
+        }
+
+        // User info
+        const handleChatConnected = (data) => {
+
             setUserInfo({
                 userId: data.userId,
                 username: data.username
             })
+            setIsLoading(false)
 
-        })
+        }
 
-        // ✅ Listen for user joined events
-        socketRef.current.on('user:joined', (newUser) => {
+        // User joined
+        const handleUserJoined = (newUser) => {
+
             setOnlineUsers(prev => {
-                // Don't add if already in list or if it's yourself
-                if (userInfo && newUser.userId === userInfo.userId) {
-                    return prev
-                }
-                if (prev.some(user => user.userId === newUser.userId)) {
-                    return prev
-                }
+                if (userInfo && newUser.userId === userInfo.userId) return prev
+                if (prev.some(user => user.userId === newUser.userId)) return prev
                 return [...prev, newUser]
             })
-        })
+        }
 
-        // ✅ Listen for user left events
-        socketRef.current.on('user:left', (leftUser) => {
-            console.log('👋 User left:', leftUser)
+        // User left
+        const handleUserLeft = (leftUser) => {
+
             setOnlineUsers(prev => prev.filter(user => user.userId !== leftUser.userId))
-
-            // If we were chatting with this user, deselect them
             if (selectedUser?.userId === leftUser.userId) {
                 setSelectedUser(null)
             }
-        })
+        }
 
-        // ✅ Listen for initial online users list
-        socketRef.current.on('online-users-list', (users) => {
-            console.log('👥 Online users list:', users)
-            // Backend already excludes self, so just set the list
+        // Online users list
+        const handleOnlineUsersList = (users) => {
+
             setOnlineUsers(users)
-        })
+        }
 
-        // ✅ Keep this for backward compatibility
-        socketRef.current.on('online-users-updated', (users) => {
+        // Online users updated
+        const handleOnlineUsersUpdated = (users) => {
+
             console.log('👥 Online users updated:', users)
-            // Filter out self if needed
             if (userInfo) {
                 const filtered = users.filter(user => user.userId !== userInfo.userId)
                 setOnlineUsers(filtered)
             } else {
                 setOnlineUsers(users)
             }
-        })
+        }
 
-        socketRef.current.on('connect_error', (error) => {
-            console.error('🔴 Connection error:', error.message)
-            setIsConnected(false)
+        // Error handler
+        const handleError = (errorData) => {
 
-            if (error.message.includes('token') || error.message.includes('auth')) {
-                alert('Authentication failed. Please login again.')
-                window.location.href = '/login'
-            }
-        })
-
-        //listen for history
-        socketRef.current.on("private-history", (data) => {
-            console.log('Received private history:', data)
-
-            const messages = data.messages || data
-            const targetUserId = data.userId || data.otherUserId || selectedUser?.userId
-            const fromUser = data.fromUser
-
-
-            if (!fromUser) {
-                console.log("UserInfo not ready yet")
-                return
-            }
-
-            if (!targetUserId) {
-                console.error('No userId provided in private-history event')
-                return
-            }
-
-
-            // storing loaded messages
-            setPrivateMessages(prev => {
-                const formatted = messages.map(msg => (
-                    {
-                        message: msg.message,
-                        isMe: String(msg.fromUserId) === String(fromUser),
-                        fromUserId: msg.fromUserId,
-                        fromUsername: msg.fromUsername,
-                        toUserId: msg.toUserId,
-                        toUsername: msg.toUsername,
-                        timestamp: msg.createdAt
-                    }))
-
-                return {
-                    ...prev,
-                    [targetUserId]: formatted
-                }
-            })
-        })
-
-
-        // recive message from other user
-        socketRef.current.on('receive-private-message', (data) => {
-            console.log('📩 Received private message:', data)
-
-            //add to existed chat
-            setPrivateMessages(prev => {
-                const existing = prev[data.fromUserId] || []
-                return {
-                    ...prev,
-                    [data.fromUserId]: [...existing, {
-                        message: data.message,
-                        fromUserId: data.fromUserId,
-                        isMe: false,
-                        timestamp: data.timestamp
-                    }]
-                }
-            })
-        })
-
-
-        socketRef.current.on('error', (errorData) => {
             console.error('Socket error:', errorData)
             if (errorData.type === 'user_offline') {
                 alert('User is offline')
             }
+        }
+
+        // Handle current user response (if you add this on backend)
+        const handleCurrentUser = (data) => {
+
+            setUserInfo({
+                userId: data.userId,
+                username: data.username
+            })
+            setIsLoading(false)
+
+        }
+
+        // Remove existing listeners first
+        socket.off('connect', handleConnect)
+        socket.off('disconnect', handleDisconnect)
+        socket.off('chat:connected', handleChatConnected)
+        socket.off('user:joined', handleUserJoined)
+        socket.off('user:left', handleUserLeft)
+        socket.off('online-users-list', handleOnlineUsersList)
+        socket.off('online-users-updated', handleOnlineUsersUpdated)
+        socket.off('error', handleError)
+        socket.off('private-history', handleHistory)
+        socket.off('receive-private-message', handleReceiveMessage)
+        socket.off('current-user', handleCurrentUser)
+
+        // Register all listeners
+        socket.on('connect', handleConnect)
+        socket.on('disconnect', handleDisconnect)
+        socket.on('chat:connected', handleChatConnected)
+        socket.on('user:joined', handleUserJoined)
+        socket.on('user:left', handleUserLeft)
+        socket.on('online-users-list', handleOnlineUsersList)
+        socket.on('online-users-updated', handleOnlineUsersUpdated)
+        socket.on('error', handleError)
+        socket.on('current-user', handleCurrentUser)
+
+        setupChatListeners(socket, {
+            onHistory: handleHistory,
+            onReceiveMessage: handleReceiveMessage
         })
 
-        socketRef.current.on('disconnect', (reason) => {
-            console.log('🔌 Socket disconnected:', reason)
-            setIsConnected(false)
-            setOnlineUsers([])
-            setSelectedUser(null)
-        })
+        // If socket is already connected, request user info
+        if (socket.connected) {
+            socket.emit('get-current-user')
+            socket.emit('get-online-users')
+        }
 
         return () => {
-            console.log('🧹 Cleaning up socket connection')
-            if (socketRef.current) {
-                socketRef.current.disconnect()
-            }
+            socket.off('connect', handleConnect)
+            socket.off('disconnect', handleDisconnect)
+            socket.off('chat:connected', handleChatConnected)
+            socket.off('user:joined', handleUserJoined)
+            socket.off('user:left', handleUserLeft)
+            socket.off('online-users-list', handleOnlineUsersList)
+            socket.off('online-users-updated', handleOnlineUsersUpdated)
+            socket.off('error', handleError)
+            socket.off('current-user', handleCurrentUser)
+            socket.off('private-history', handleHistory)
+            socket.off('receive-private-message', handleReceiveMessage)
         }
-    }, []) // Empty dependency array - only run once
+    }, [socket])
 
-
+    // Request history when user is selected
+    useEffect(() => {
+        if (socket && selectedUser && userInfo) {
+            console.log('Requesting history for user:', selectedUser.userId)
+            socket.emit('get-private-history', selectedUser.userId)
+        }
+    }, [socket, selectedUser, userInfo])
 
     const sendPrivateMessage = () => {
         if (!selectedUser) {
             alert('Please select a user to message')
             return
         }
-        if (!messageRef.current?.value.trim()) {
+        if (!messageRef.current?.value.trim() || !socket) {
             return
         }
 
         const messageText = messageRef.current.value
-        const timestamp = new Date()
+        const timestamp = new Date().toISOString()
 
         // Optimistically add message to UI
         setPrivateMessages(prev => {
@@ -221,19 +249,14 @@ export default function Messages() {
             }
         })
 
-        // ✅ Use correct event name 'send-private-message'
-        socketRef.current.emit('send-private-message', {
+        socket.emit('send-private-message', {
             toUserId: selectedUser.userId,
             message: messageText
         })
 
-        // Clear input
         messageRef.current.value = ''
         messageRef.current.focus()
     }
-
-    // ✅ Add manual refresh function
-
 
     const getMessagesForUser = (userId) => {
         return privateMessages[userId] || []
@@ -245,25 +268,30 @@ export default function Messages() {
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
 
-    if (!isConnected || !userInfo) {
+    // Show loading state
+    if (isLoading || !isConnected || !userInfo) {
         return (
             <div style={{
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                height: '200px'
+                height: '80vh'
             }}>
                 <div className="text-center">
-                    <div className="spinner-border text-primary" role="status">
+                    <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
                         <span className="visually-hidden">Loading...</span>
                     </div>
-                    <p className="mt-3">Connecting to chat server...</p>
+                    <p className="mt-3 fs-5">Connecting to chat server...</p>
+                    {!socket && <p className="text-muted">Waiting for socket...</p>}
+                    {socket && !socket.connected && <p className="text-muted">Connecting...</p>}
+                    {socket?.connected && !userInfo && <p className="text-muted">Getting user info...</p>}
                 </div>
             </div>
         )
     }
 
     return (
+
         <Container className="d-flex gap-1" style={{ height: '80vh' }}>
             {/* Online Users Sidebar */}
 
@@ -271,12 +299,11 @@ export default function Messages() {
                 onlineUsers={onlineUsers}
                 selectedUser={selectedUser}
                 setSelectedUser={setSelectedUser}
-                socketRef={socketRef}
             />
 
 
             {/* Chat Area */}
-            <div className="flex-grow-1 d-flex flex-column p-4" style={{ border: '1px solid gray' }}>
+            <div className="flex-grow-1 d-flex flex-column p-1" style={{ border: '1px solid gray' }}>
                 {selectedUser ? (
                     <>
                         {/* chat display header */}
