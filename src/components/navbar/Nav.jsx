@@ -7,6 +7,7 @@ import NavDropdown from 'react-bootstrap/NavDropdown';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { clearUser } from '../../store/slices/userSlice';
+import NotificationBell from '../notifications/NotificationBell';
 
 
 export default function NavBar() {
@@ -25,18 +26,24 @@ export default function NavBar() {
 
         <Navbar.Collapse className="text-white " id="basic-navbar-nav">
           <Nav className="ms-auto d-flex align-items-center">
+            {/* notification */}
+            {isLoggedIn && <NotificationBell />}
+            {/* Home */}
             <Nav.Link className="text-white" as={Link} to='/'>Home</Nav.Link>
-            {!isLoggedIn && <>     <Nav.Link className="text-white" as={Link} to='/register'>Register</Nav.Link>
-              <Nav.Link className="text-white" as={Link} to='/login'>Login</Nav.Link></>}
 
+            {/* signin - signout */}
+            {!isLoggedIn &&
+              <>
+                <Nav.Link className="text-white" as={Link} to='/register'>Register</Nav.Link>
+                <Nav.Link className="text-white" as={Link} to='/login'>Login</Nav.Link>
+              </>
+            }
+            {/* profile - chats - logout */}
             {isLoggedIn &&
               <>
                 <Nav.Link as={Link} className="text-white" to='/profile'>Profile</Nav.Link>
                 <Nav.Link as={Link} className="text-white" to='/messages'>Chats</Nav.Link>
-
                 <Button variant='danger' onClick={handleLogout}>Logout</Button>
-
-
               </>}
 
           </Nav>

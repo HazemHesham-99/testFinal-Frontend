@@ -18,17 +18,15 @@ import Profile from './pages/profile/Profile'
 import AddComment from './components/addComment/AddComment'
 import Messages from './pages/Messages/Messages'
 //========ADD=========
-import { setupNotificationListeners } from "./socket/notificationListeners"
-import { connectSocket , disconnectSocket } from './socket/Socket'
+import { connectSocket, disconnectSocket } from './socket/Socket'
 import { SocketContext } from './store/context/socketContext'
+import { NotificationProvider } from './store/context/NotificationContext'
 //=====================
 export default function App() {
 
-  //======================
+  //===========socket io ===========
   const [socket, setSocket] = useState(null)
-  const [notifications, setNotifications] = useState([])
-  const [unreadCount, setUnreadCount] = useState(0)
-  //============================
+
   const { isLoggedIn } = useSelector((state) => state.user)
   const dispatch = useDispatch()
 
@@ -46,32 +44,21 @@ export default function App() {
   //check if sign in or not
   const token = localStorage.getItem("token")
 
-//====================================
-useEffect(() => {
+  //==============SOCKET connection ======================
+  useEffect(() => {
 
-  if (!token) return
+    if (!token) return
 
-  const s = connectSocket(token)
-  setSocket(s)
+    const s = connectSocket(token)
+    setSocket(s)
 
-  setupNotificationListeners(s, {
-    onNewNotification: (notif) => {
-      setNotifications(prev => [notif, ...prev])
-      setUnreadCount(prev => prev + 1)
-    },
-
-    onNotificationList: (list) => {
-      setNotifications(list)
-      setUnreadCount(list.filter(n => !n.read).length)
+    return () => {
+      disconnectSocket()
     }
-  })
 
-  return () => {
-    disconnectSocket()
-  }
+  }, [token])
 
-}, [token])
-//======================================
+  // Validate token
   useEffect(() => {
     async function validateToken() {
       if (token) {
@@ -92,42 +79,43 @@ useEffect(() => {
 
   }, [token])
   return (
-<SocketContext.Provider value={socket}>
+    <SocketContext.Provider value={socket}>
+      <NotificationProvider>
+        <div className="d-flex flex-column min-vh-100">
+          <Toaster />
+          <NavBar />
 
-    <div className="d-flex flex-column min-vh-100">
-      <Toaster />
-      <NavBar />
-
-      {/* light and dark mood */}
-      <Button className='displayMoodButton' variant="outline-primary" onClick={toggleTheme}>
-        {theme === 'light' ? '🌙' : '☀️'}
-      </Button>
+          {/* light and dark mood */}
+          <Button className='displayMoodButton' variant="outline-primary" onClick={toggleTheme}>
+            {theme === 'light' ? '🌙' : '☀️'}
+          </Button>
 
 
 
-      <div className="flex-grow-1">
+          <div className="flex-grow-1">
 
-        <Container className='my-3 py-3'>
-          <Routes>
-            {(isLoggedIn) && (<>
-              <Route Component={Profile} path='/profile' />
-              <Route Component={AddComment} path='/test' />
+            <Container className='my-3 py-3'>
+              <Routes>
+                {(isLoggedIn) && (<>
+                  <Route Component={Profile} path='/profile' />
+                  <Route Component={AddComment} path='/test' />
 
-            </>)}
-            <Route Component={Home} path='/' />
-            <Route Component={Messages} path='/messages' />
+                </>)}
+                <Route Component={Home} path='/' />
+                <Route Component={Messages} path='/messages' />
 
-            {(!isLoggedIn) && (<>
-              <Route Component={Login} path='/login' />
-              <Route Component={Register} path='/register' />
-              <Route Component={Otpconfirm} path='/verify-otp' />
-              <Route Component={Restpassword} path='/reset-password/:token' />
-            </>)}
+                {(!isLoggedIn) && (<>
+                  <Route Component={Login} path='/login' />
+                  <Route Component={Register} path='/register' />
+                  <Route Component={Otpconfirm} path='/verify-otp' />
+                  <Route Component={Restpassword} path='/reset-password/:token' />
+                </>)}
 
-          </Routes>
-        </Container>
-      </div >
-    </div >
+              </Routes>
+            </Container>
+          </div >
+        </div >
+      </NotificationProvider>
     </SocketContext.Provider>
 
   )
