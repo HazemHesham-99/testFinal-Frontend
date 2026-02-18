@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { clearUser } from '../../store/slices/userSlice';
 import NotificationBell from '../notifications/NotificationBell';
+import { IoIosLogOut } from 'react-icons/io';
 
 
 export default function NavBar() {
@@ -43,7 +44,7 @@ export default function NavBar() {
               <>
                 <Nav.Link as={Link} className="text-white" to='/profile'>Profile</Nav.Link>
                 <Nav.Link as={Link} className="text-white" to='/messages'>Chats</Nav.Link>
-                <Button variant='danger' onClick={handleLogout}>Logout</Button>
+                <Button  className="border-0 text-white hover-text-danger hover-border-danger"  variant="outline-danger" onClick={handleLogout}><IoIosLogOut size={25} /></Button>
               </>}
 
           </Nav>
